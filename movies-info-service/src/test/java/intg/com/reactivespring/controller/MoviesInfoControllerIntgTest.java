@@ -101,6 +101,17 @@ class MoviesInfoControllerIntgTest {
     }
 
     @Test
+    void getMovieInfoById_notFound() {
+        var movieId = "def";
+        webTestClient
+                .get()
+                .uri(MOVIES_INFO_URI + "/{id}", movieId)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+    }
+
+    @Test
     void updateMovieInfo() {
         var movieId = "abc";
         var movieInfo = new MovieInfo("abc", "Dark Knight Rises - Updated",
@@ -120,6 +131,21 @@ class MoviesInfoControllerIntgTest {
                     assert updatedMovieInfo.getMovieInfoId() != null;
                     assertEquals("Dark Knight Rises - Updated", updatedMovieInfo.getName());
                 });
+    }
+
+    @Test
+    void updateMovieInfo_notFound() {
+        var movieId = "def";
+        var movieInfo = new MovieInfo("abc", "Dark Knight Rises - Updated",
+                2012, List.of("Christian Bale", "Tom Hardy"), LocalDate.parse("2012-07-20"));
+
+        webTestClient
+                .put()
+                .uri(MOVIES_INFO_URI + "/{id}", movieId)
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
     }
 
     @Test
