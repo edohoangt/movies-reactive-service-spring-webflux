@@ -53,6 +53,26 @@ class MovieInfoRepositoryIntegrationTest {
     }
 
     @Test
+    void findByYear() {
+        // when
+        var moviesInfoFlux = movieInfoRepository.findByYear(2005);
+        // then
+        StepVerifier.create(moviesInfoFlux)
+                .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
+    void findByName() {
+        // when
+        var moviesInfoFlux = movieInfoRepository.findByName("Batman Begins");
+        // then
+        StepVerifier.create(moviesInfoFlux)
+                .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
     void findById() {
         // when
         var moviesInfoMono = movieInfoRepository.findById("abc").log();
