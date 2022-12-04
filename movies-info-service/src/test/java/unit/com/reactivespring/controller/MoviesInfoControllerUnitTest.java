@@ -97,6 +97,28 @@ class MoviesInfoControllerUnitTest {
     }
 
     @Test
+    void addMovieInfo_withValidation() {
+        var movieInfo = new MovieInfo(null, "",
+                -2001, List.of("Christian Bale", ""), LocalDate.parse("2005-06-15"));
+
+        webTestClient
+                .post()
+                .uri(MOVIES_INFO_URI)
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(String.class)
+                .consumeWith(stringEntityExchangeResult -> {
+                    var responseBody = stringEntityExchangeResult.getResponseBody();
+                    var expectedErrorMessage = "movieInfo.cast must be present; movieInfo.name must be present; movieInfo.year must be a positive value";
+                    System.out.println("Response body: " + responseBody);
+                    assert responseBody != null;
+                    assertEquals(expectedErrorMessage, responseBody);
+                });
+    }
+
+    @Test
     void updateMovieInfo() {
         var movieId = "abc";
         var movieInfo = new MovieInfo("abc", "Dark Knight Rises - Updated",
