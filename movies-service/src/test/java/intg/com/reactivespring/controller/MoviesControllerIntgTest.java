@@ -1,5 +1,6 @@
 package com.reactivespring.controller;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.reactivespring.domain.Movie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,6 +99,12 @@ public class MoviesControllerIntgTest {
                         )
                 );
 
+                stubFor(get(urlPathEqualTo("/v1/reviews"))
+                        .willReturn(
+                                aResponse().withStatus(404)
+                        )
+                );
+
                 webTestClient
                         .get()
                         .uri("/v1/movies/{id}", movieId)
@@ -119,13 +126,6 @@ public class MoviesControllerIntgTest {
                                 aResponse()
                                         .withStatus(500)
                                         .withBody("MoviesInfo Service Unavailable")
-                        )
-                );
-                stubFor(get(urlPathEqualTo("/v1/reviews"))
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", "application/json")
-                                        .withBodyFile("reviews.json")
                         )
                 );
 
