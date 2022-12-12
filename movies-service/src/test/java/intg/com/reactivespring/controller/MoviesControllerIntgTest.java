@@ -116,6 +116,8 @@ public class MoviesControllerIntgTest {
                                 assert Objects.requireNonNull(movie).getReviewList().size() == 0;
                                 assertEquals("Batman Begins", movie.getMovieInfo().getName());
                         });
+
+                WireMock.verify(1, getRequestedFor(urlEqualTo("/v1/moviesinfo" + "/" + movieId)));
         }
 
         @Test
@@ -137,6 +139,43 @@ public class MoviesControllerIntgTest {
                         .is5xxServerError()
                         .expectBody(String.class)
                         .isEqualTo("Server exception in MoviesInfo Service: MoviesInfo Service Unavailable");
+
+
+                WireMock.verify(4, getRequestedFor(urlEqualTo("/v1/moviesinfo" + "/" + movieId)));
+        }
+
+        @Test
+        void retrieveMovieById_Reviews_5xx() {
+                WireMock wireMock = new WireMock();
+
+                var movieId = "abc";
+                stubFor(get(urlEqualTo("/v1/moviesinfo" + "/" + movieId))
+                        .willReturn(
+                                aResponse()
+                                        .withHeader("Content-Type", "application/json")
+                                        .withBodyFile("movieinfo.json")
+                        )
+                );
+
+                stubFor(get(urlPathEqualTo("/v1/reviews"))
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(500)
+                                        .withBody("Reviews Service Unavailable")
+                        )
+                );
+
+                webTestClient
+                        .get()
+                        .uri("/v1/movies/{id}", movieId)
+                        .exchange()
+                        .expectStatus()
+                        .is5xxServerError()
+                        .expectBody(String.class)
+                        .isEqualTo("Server exception in Reviews Service: Reviews Service Unavailable");
+
+
+                verify(4, getRequestedFor(urlPathMatching("/v1/reviews*")));
         }
 
 }

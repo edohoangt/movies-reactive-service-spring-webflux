@@ -6,3 +6,5 @@ server:
 restClient:
   moviesInfoUrl: http://localhost:8080/v1/moviesinfo
   reviewsUrl: http://localhost:8081/v1/reviews
+wiremock:
+  reset-mappings-after-each-test: true

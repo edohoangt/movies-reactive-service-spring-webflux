@@ -3,11 +3,16 @@ package com.reactivespring.client;
 import com.reactivespring.domain.MovieInfo;
 import com.reactivespring.exception.MoviesInfoClientException;
 import com.reactivespring.exception.MoviesInfoServerException;
+import com.reactivespring.util.RetryUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+
+import java.time.Duration;
 
 @Component
 public class MoviesInfoRestClient {
@@ -23,6 +28,12 @@ public class MoviesInfoRestClient {
 
     public Mono<MovieInfo> retrieveMovieInfo(String movieId) {
         var url = moviesInfoUrl.concat("/{id}");
+//        var retrySpec = Retry
+//                .fixedDelay(3, Duration.ofSeconds(1))
+//                .filter(ex -> ex instanceof MoviesInfoServerException)
+//                .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
+//                        Exceptions.propagate(retrySignal.failure()));
+
         return webClient
                 .get()
                 .uri(url, movieId)
@@ -52,6 +63,8 @@ public class MoviesInfoRestClient {
                                 new MoviesInfoServerException("Server exception in MoviesInfo Service: " + responseMessage)
                         )))
                 .bodyToMono(MovieInfo.class)
+//                .retry(3)
+                .retryWhen(RetryUtil.retrySpec())
                 .log();
     }
 
