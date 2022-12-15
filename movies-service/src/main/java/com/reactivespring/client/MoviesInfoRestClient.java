@@ -1,5 +1,6 @@
 package com.reactivespring.client;
 
+import com.reactivespring.domain.Movie;
 import com.reactivespring.domain.MovieInfo;
 import com.reactivespring.exception.MoviesInfoClientException;
 import com.reactivespring.exception.MoviesInfoServerException;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.Exceptions;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
@@ -68,4 +70,23 @@ public class MoviesInfoRestClient {
                 .log();
     }
 
+    public Flux<MovieInfo> retrieveMoviesInfoStream() {
+        var url = moviesInfoUrl.concat("/stream");
+
+        return webClient
+                .get()
+                .uri(url)
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, clientResponse -> clientResponse.bodyToMono(String.class)
+                        .flatMap(responseMessage -> Mono.error(
+                                new MoviesInfoClientException(responseMessage, clientResponse.statusCode().value())
+                        )))
+                .onStatus(HttpStatus::is5xxServerError, clientResponse -> clientResponse.bodyToMono(String.class)
+                        .flatMap(responseMessage -> Mono.error(
+                                new MoviesInfoServerException("Server exception in MoviesInfo Service: " + responseMessage)
+                        )))
+                .bodyToFlux(MovieInfo.class)
+                .retryWhen(RetryUtil.retrySpec())
+                .log();
+    }
 }
